@@ -11,7 +11,25 @@
 
 (function () {
   "use strict";
+async function moveHudTo(x, y, steps = 20, delay = 8) {
+  const hud = document.querySelector('[class^="Hud_selectedItem__"]');
+  if (!hud) return;
 
+  // Lấy vị trí hiện tại
+  const m = hud.style.transform.match(/translate3d\(([\d.]+)px,\s*([\d.]+)px/);
+  let curX = m ? parseFloat(m[1]) : 0;
+  let curY = m ? parseFloat(m[2]) : 0;
+
+  const dx = (x - curX) / steps;
+  const dy = (y - curY) / steps;
+
+  for (let i = 1; i <= steps; i++) {
+    curX += dx;
+    curY += dy;
+    hud.style.transform = `translate3d(${curX}px, ${curY}px, 0px)`;
+    await new Promise(r => setTimeout(r, delay + Math.random() * 3));
+  }
+}
   /************ ⚙️ HÀM HIỂN THỊ THÔNG BÁO ************/
   function showMessage(msg) {
     const player = window.pga?.helpers?.getRoomScene?.()?.selfPlayer;
@@ -21,65 +39,37 @@
 
   /************ 🖱️ HÀM CLICK CÓ DI CHUYỂN CHUỘT ************/
   async function simulateEntityClick(entity) {
-    try {
-      const room = window.pga?.helpers?.getRoomScene?.();
-      const cam = room?.cameras?.main;
-      const canvas = document.querySelector("canvas");
-      if (!canvas || !cam) return;
+  try {
+    const room = window.pga?.helpers?.getRoomScene?.();
+    const cam = room?.cameras?.main;
+    const canvas = document.querySelector("canvas");
+    if (!canvas || !cam) return;
 
-      // 🟢 Lấy toạ độ HUD (đọc trực tiếp từ transform)
-      const hud = document.querySelector('[class^="Hud_selectedItem__"]');
-      let hudX = window.innerWidth / 2, hudY = window.innerHeight / 2;
-      if (hud) {
-        const m = hud.style.transform.match(/translate3d\(([\d.]+)px,\s*([\d.]+)px/);
-        if (m) { hudX = +m[1]; hudY = +m[2]; }
-      }
+    // 🟢 Tính vị trí entity trên màn hình
+    const worldX = entity.x ?? 0, worldY = entity.y ?? 0;
+    const ex = (worldX - cam.worldView.x) * cam.zoom;
+    const ey = (worldY - cam.worldView.y) * cam.zoom;
 
-      // 🟢 Tính vị trí entity trên màn hình
-      const worldX = entity.x ?? 0, worldY = entity.y ?? 0;
-      const ex = (worldX - cam.worldView.x) * cam.zoom;
-      const ey = (worldY - cam.worldView.y) * cam.zoom;
+    // 🟢 Di chuyển HUD (icon item) tới entity
+    await moveHudTo(ex, ey, 18, 6); // 18 bước, delay 6ms → tự nhiên, nhanh
 
-      // 🟢 Di chuyển chuột mượt từ HUD đến entity
-      const steps = 18;
-      for (let i = 1; i <= steps; i++) {
-        const cx = hudX + (ex - hudX) * (i / steps);
-        const cy = hudY + (ey - hudY) * (i / steps);
-        document.dispatchEvent(
-          new MouseEvent("mousemove", { clientX: cx, clientY: cy, bubbles: true })
-        );
-        await new Promise((r) => setTimeout(r, 8 + Math.random() * 4));
-      }
-
-      // 🟢 Click thật trên canvas
-      ["mousedown", "mouseup", "click"].forEach((type) =>
-        canvas.dispatchEvent(
-          new MouseEvent(type, { clientX: ex, clientY: ey, bubbles: true })
-        )
-      );
-
-      // 🟢 Pointer object đầy đủ
-      const pointer = {
-        worldX,
-        worldY,
-        center: { x: worldX, y: worldY },
-        position: { x: worldX, y: worldY },
-        leftButtonReleased: () => true,
-        leftButtonDown: () => false,
-        leftButtonJustPressed: () => false,
-        rightButtonReleased: () => false,
-        rightButtonDown: () => false,
-        rightButtonJustPressed: () => false,
-        middleButtonReleased: () => false,
-        middleButtonDown: () => false,
-        middleButtonJustPressed: () => false,
-      };
-
-      entity.clicked(pointer, {});
-    } catch (err) {
-      console.warn("[Click Error]", err);
-    }
+    // 🟢 Click thật (game logic)
+    const pointer = {
+      worldX, worldY,
+      center: { x: worldX, y: worldY },
+      position: { x: worldX, y: worldY },
+      leftButtonReleased: () => true,
+      leftButtonDown: () => false,
+      rightButtonReleased: () => false,
+      rightButtonDown: () => false,
+      middleButtonReleased: () => false,
+      middleButtonDown: () => false,
+    };
+    entity.clicked(pointer, {});
+  } catch (err) {
+    //console.warn("[Click Error]", err);
   }
+}
 
   /************ 🌾 HÀM TỰ ĐỘNG CLICK RUỘNG ************/
 let STOP_AUTO = false; // 🚨 biến dừng khẩn cấp toàn cục
