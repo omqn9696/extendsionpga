@@ -146,6 +146,3 @@
     if (e.code === "Space") STOP_AUTO = true; // Dừng khẩn cấp
   });
 })();
-
- // console.log("✅ [Auto Farm] Nhấn [Space] để trồng/tưới/cắt tự động | [Del] để xoá log.");
-})();
