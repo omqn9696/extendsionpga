@@ -69,6 +69,63 @@
     function mod_skin(){
         if(window.pga.helpers.getRoomScene()){
             const a =  window.pga.helpers.getRoomScene().selfPlayer.playerData;
+            if(a.avatar.id == "genju"){
+            //console.log(a)
+
+                switch(a.avatar.display.tokenId) {
+                    case '1374':
+                        a.avatar.display = {
+                        "avatarId": "genju",
+                        "tokenId": "27",
+                        "symbol": "GENJU",
+                        "nft": true,
+                        "image": "ipfs://QmcGYUq15moEzWRjgf89EAgvGnjcZEFtneFWYo7chL7kTw/27",
+                        "name": "Genju Genesisstrigidae",
+                        "chain": "ronin",
+                        "body": "undefined",
+                        "clothing": "undefined",
+                        "zombieeyes": "undefined",
+                        "eyes": "sad",
+                        "zombiemouth": "undefined",
+                        "zombieheadwear": "undefined",
+                        "eyewear": "undefined",
+                        "mouth": "undefined",
+                        "headwear": "undefined",
+                        "specialheadwear": "undefined",
+                        "onesies": "undefined",
+                        "honorary": "undefined",
+                        "1of1": "akumanosenshi"
+                    }
+                        break;
+                    case '1373':
+                       a.avatar.display = {
+                        "avatarId": "genju",
+                        "tokenId": "27",
+                        "symbol": "GENJU",
+                        "nft": true,
+                        "image": "ipfs://QmcGYUq15moEzWRjgf89EAgvGnjcZEFtneFWYo7chL7kTw/27",
+                        "name": "Genju Genesisstrigidae",
+                        "chain": "ronin",
+                        "body": "white",
+                        "clothing": "undefined",
+                        "zombieeyes": "undefined",
+                        "eyes": "sad",
+                        "zombiemouth": "undefined",
+                        "zombieheadwear": "undefined",
+                        "eyewear": "skigoggles",
+                        "mouth": "smile",
+                        "headwear": "undefined",
+                        "specialheadwear": "undefined",
+                        "onesies": "sharkonesie",
+                        "honorary": "undefined",
+                        "1of1": "undefined"
+                    }
+                        break;
+                        // code block
+                }
+
+            }
+            //console.log(a)
             a.modifiers.push(
                 {
                     kind: "particle6"
