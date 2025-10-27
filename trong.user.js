@@ -82,81 +82,124 @@
     /************ 🌾 AUTO TRỒNG / TƯỚI / CẮT ************/
     let STOP_AUTO = false;
 
-    async function clickAllCropsSmart() {
-        STOP_AUTO = false;
+async function clickAllCropsSmart() {
+  STOP_AUTO = false;
 
-        const room = window.pga?.helpers?.getRoomScene?.();
-        if (!room?.entities) return showMessage("❌ Không tìm thấy room.entities");
+  const room = window.pga?.helpers?.getRoomScene?.();
+  if (!room?.entities) return showMessage("❌ Không tìm thấy room.entities");
 
-        const entities = Array.from(room.entities.values());
-        const redux = window.pga?.helpers?.getReduxValue?.()?.storage;
-        const selectedItemId = redux?.selectedItem?.id;
-        const selectedQty = redux?.selectedQty ?? 0;
+  const entities = Array.from(room.entities.values());
+  const redux = window.pga?.helpers?.getReduxValue?.()?.storage;
+  const selectedItemId = redux?.selectedItem?.id;
+  const selectedQty = redux?.selectedQty ?? 0;
 
-        if (!selectedItemId) return showMessage("⚠️ Không có item nào đang được cầm!");
-        if (selectedQty < 1) return showMessage("⚠️ Hết item để sử dụng!");
+  if (!selectedItemId) return showMessage("⚠️ Không có item nào đang được cầm!");
+  if (selectedQty < 1) return showMessage("⚠️ Hết item để sử dụng!");
 
-        let targetStates = [];
-        let reverseMode = false; // 🚀 nếu true → chạy ngược
-        if (selectedItemId === "itm_rustyWateringCan") {
-            targetStates = ["planted"];
-            reverseMode = true; // 🔁 khi tưới, chạy ngược
-        } else if (selectedItemId.endsWith("eeds")) targetStates = ["empty"];
-        else if (selectedItemId.startsWith("itm_shears_")) targetStates = ["grown"];
-        else return showMessage("⚠️ Item này không hợp lệ cho auto.");
+  let targetStates = [];
+  let reverseMode = false;
 
-        const crops = entities.filter(ent => {
-            const id = ent?.gameEntity?.id;
-            const s = (ent?.state?.state || ent?.state || ent?.properties?.state || ent?.properties?.growthStage || "").toString().toLowerCase();
-            return id === "ent_allcrops" && targetStates.includes(s);
-        });
+  if (selectedItemId === "itm_rustyWateringCan") {
+    targetStates = ["planted"];
+    reverseMode = true; // 🔁 khi tưới, chạy ngược
+  } else if (selectedItemId.endsWith("eeds")) targetStates = ["empty"];
+  else if (selectedItemId.startsWith("itm_shears_")) targetStates = ["grown"];
+  else return showMessage("⚠️ Item này không hợp lệ cho auto.");
 
-        if (!crops.length) return showMessage("✅ Không có ô ruộng phù hợp để click.");
+  // 🌾 Lọc crop phù hợp
+  const crops = entities.filter((ent) => {
+    const id = ent?.gameEntity?.id;
+    const s =
+      (ent?.state?.state ||
+        ent?.state ||
+        ent?.properties?.state ||
+        ent?.properties?.growthStage ||
+        ""
+      ).toString().toLowerCase();
 
-        const rows = {};
-        for (const c of crops) {
-            const y = Math.round(c.y / 10) * 10;
-            if (!rows[y]) rows[y] = [];
-            rows[y].push(c);
-        }
-
-        let sortedY = Object.keys(rows).map(Number).sort((a, b) => a - b);
-        if (reverseMode) sortedY.reverse(); // 🔁 nếu watering → đi ngược hàng (dưới lên)
-
-        showMessage(`🌾 Auto ${crops.length} ô | ${reverseMode ? "Reverse" : "Zigzag"} mode`);
-        console.log("⏳ Nhấn [S] để DỪNG KHẨN CẤP!");
-
-        let reverse = false;
-        for (const y of sortedY) {
-            if (STOP_AUTO) return showMessage("🛑 Auto dừng khẩn cấp!");
-
-            let row = rows[y];
-            row.sort((a, b) => a.x - b.x);
-            if (reverse) row.reverse();
-
-            for (const crop of row) {
-                if (STOP_AUTO) return showMessage("🛑 Auto dừng khẩn cấp!");
-                const health =
-                      window.pga?.helpers?.getReduxValue?.()?.storage?.selectedSlot?.state?.displayInfo?.health ?? 9999;
-                if (health <= 1 || window.pga?.helpers?.getReduxValue().game.player.full.energy.level <= 4) {
-                    STOP_AUTO = true;
-                    return stopMsg("🛑 Tool sắp hỏng! Dừng auto ngay!");
-                }
-                const curQty = window.pga?.helpers?.getReduxValue?.()?.storage?.selectedQty ?? 0;
-                if (curQty < 1) {
-                    showMessage("❌ Hết item giữa chừng — dừng auto.");
-                    return;
-                }
-
-                await simulateEntityClick(crop);
-                await new Promise(r => setTimeout(r, 10 + Math.random() * 10));
-            }
-
-            reverse = !reverse;
-        }
-
-        if (!STOP_AUTO) showMessage("✅ Hoàn tất auto!");
+    // ⚠️ Nếu đang tưới nước → chỉ lấy crop có utcTarget == 0
+    if (selectedItemId === "itm_rustyWateringCan") {
+      const target = ent?.currentState?.displayInfo?.utcTarget ?? 1;
+      return id === "ent_allcrops" && targetStates.includes(s) && target === 0;
     }
+
+    // các trường hợp còn lại (gieo hoặc cắt)
+    return id === "ent_allcrops" && targetStates.includes(s);
+  });
+
+  if (!crops.length)
+    return showMessage("✅ Không có ô ruộng phù hợp để click.");
+
+  // 🧭 Gom nhóm crop theo hàng (theo y, làm tròn)
+  const rows = {};
+  for (const c of crops) {
+    const y = Math.round(c.y / 10) * 10;
+    if (!rows[y]) rows[y] = [];
+    rows[y].push(c);
+  }
+
+  let sortedY = Object.keys(rows)
+    .map(Number)
+    .sort((a, b) => a - b);
+  if (reverseMode) sortedY.reverse(); // 🔁 nếu watering → đi ngược hàng (dưới lên)
+
+  showMessage(
+    `🌾 Auto ${crops.length} ô | ${
+      reverseMode ? "Reverse" : "Zigzag"
+    } mode`
+  );
+  console.log("⏳ Nhấn [S] để DỪNG KHẨN CẤP!");
+
+  let reverse = false;
+  for (const y of sortedY) {
+    if (STOP_AUTO) return showMessage("🛑 Auto dừng khẩn cấp!");
+
+    let row = rows[y];
+    row.sort((a, b) => a.x - b.x);
+    if (reverse) row.reverse();
+
+    for (const crop of row) {
+      if (STOP_AUTO) return showMessage("🛑 Auto dừng khẩn cấp!");
+
+      // ⚠️ Kiểm tra tool health & energy
+      const health =
+        window.pga?.helpers?.getReduxValue?.()?.storage?.selectedSlot?.state
+          ?.displayInfo?.health ?? 999;
+      const energy =
+        window.pga?.helpers?.getReduxValue?.()?.game?.player?.full?.energy
+          ?.level ?? 999;
+
+      if (health <= 1) {
+        STOP_AUTO = true;
+        return stopMsg("🛑 Tool sắp hỏng! Dừng auto ngay!");
+      }
+      if (energy <= 4) {
+        STOP_AUTO = true;
+        return stopMsg("🪫 Energy quá thấp (<4)! Dừng auto!");
+      }
+
+      const curQty =
+        window.pga?.helpers?.getReduxValue?.()?.storage?.selectedQty ?? 0;
+      if (curQty < 1) {
+        showMessage("❌ Hết item giữa chừng — dừng auto.");
+        return;
+      }
+
+      await simulateEntityClick(crop);
+      await new Promise((r) => setTimeout(r, 10 + Math.random() * 10)); // ⚡ 10–20ms
+    }
+
+    reverse = !reverse;
+  }
+
+  if (!STOP_AUTO) showMessage("✅ Hoàn tất auto!");
+
+  function stopMsg(msg) {
+    showMessage(msg);
+    console.warn(msg);
+  }
+}
+
 async function autoChopTreesVerticalProgressiveFast() {
   STOP_AUTO = false;
 
