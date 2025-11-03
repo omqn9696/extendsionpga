@@ -385,186 +385,193 @@ async function collectReadyStations() {
             console.warn(msg);
         }
     }
-    async function autoMineZeroDelayUltraPro_v4() {
-        STOP_AUTOMINE = false;
+async function autoMineZeroDelayUltraPro_v4() {
+  STOP_AUTOMINE = false;
 
-        const room = window.pga?.helpers?.getRoomScene?.();
-        if (!room?.entities) return showMessage("❌ Không tìm thấy room.entities");
-        drawAutoStatus(true, "AUTO MINING ACTIVE");
-        showMessage("Auto start ");
-        //console.log("🧠 waiting→click, ready→double, loaded→chờ <3p, nếu tất cả >20p thì về Villa");
+  const room = window.pga?.helpers?.getRoomScene?.();
+  if (!room?.entities) return showMessage("❌ Không tìm thấy room.entities");
 
-        let lastCheck = 0;
+  drawAutoStatus(true, "AUTO MINING ACTIVE");
+  showMessage("💎 Auto Mining Start");
 
-        // 🖱️ Di chuyển HUD (chuột ảo Pixels)
-        async function moveHudTo(x, y, steps = 30, delay = 5) {
-            const hud = document.querySelector('[class^="Hud_selectedItem__"]');
-            if (!hud) return;
+  let lastCheck = 0;
 
-            const m = hud.style.transform.match(/translate3d\(([\d.-]+)px,\s*([\d.-]+)px/);
-            let curX = m ? parseFloat(m[1]) : 0;
-            let curY = m ? parseFloat(m[2]) : 0;
-            const totalDist = Math.hypot(x - curX, y - curY);
-            const stepsAuto = Math.max(15, Math.min(60, Math.floor(totalDist / 20)));
+  // 🖱️ Di chuyển HUD (chuột ảo Pixels)
+  async function moveHudTo(x, y, steps = 30, delay = 5) {
+    const hud = document.querySelector('[class^="Hud_selectedItem__"]');
+    if (!hud) return;
 
-            const ease = t => 1 - Math.pow(1 - t, 3);
+    const m = hud.style.transform.match(/translate3d\(([\d.-]+)px,\s*([\d.-]+)px/);
+    let curX = m ? parseFloat(m[1]) : 0;
+    let curY = m ? parseFloat(m[2]) : 0;
+    const totalDist = Math.hypot(x - curX, y - curY);
+    const stepsAuto = Math.max(15, Math.min(60, Math.floor(totalDist / 20)));
+    const ease = t => 1 - Math.pow(1 - t, 3);
 
-            for (let i = 1; i <= stepsAuto; i++) {
-                const t = ease(i / stepsAuto);
-                const nx = curX + (x - curX) * t;
-                const ny = curY + (y - curY) * t;
-                hud.style.transform = `translate3d(${nx}px, ${ny}px, 0px)`;
-                await new Promise(r => setTimeout(r, delay));
-            }
-        }
-
-        // 🧭 Tạo pointer và điều khiển chuột ảo di chuyển đúng vị trí mỏ
-        async function makePointerForEntity(entity) {
-            const room = window.pga?.helpers?.getRoomScene?.();
-            const cam = room?.cameras?.main;
-            const canvas = document.querySelector("canvas");
-            if (!entity || !canvas || !cam) return null;
-
-            // chuyển world → screen
-            const worldX = entity.x ?? 0;
-            const worldY = entity.y ?? 0;
-            const screenX = (worldX - cam.worldView.x) * cam.zoom;
-            const screenY = (worldY - cam.worldView.y) * cam.zoom;
-            const rect = canvas.getBoundingClientRect();
-            const targetX = rect.left + screenX;
-            const targetY = rect.top + screenY;
-
-            // 🖱️ HUD bay đến vị trí entity
-            await moveHudTo(targetX, targetY);
-
-            return {
-                x: screenX,
-                y: screenY,
-                worldX,
-                worldY,
-                center: { x: worldX, y: worldY },
-                position: { x: worldX, y: worldY },
-                leftButtonReleased: () => true,
-                rightButtonReleased: () => false,
-                leftButtonDown: () => false,
-                rightButtonDown: () => false,
-            };
-        }
-
-        // 🔁 Vòng lặp chính
-        async function loop() {
-            if (STOP_AUTOMINE) {return showMessage("🛑 Dừng khẩn cấp!");drawAutoStatus(false);}
-
-            const now = performance.now();
-            const nowUTC = Date.now();
-
-            const redux = window.pga?.helpers?.getReduxValue?.();
-            const selectedItem = redux?.storage?.selectedItem?.id ?? "";
-            const health = redux?.storage?.selectedSlot?.state?.displayInfo?.health ?? 9999;
-            const energy = redux?.game?.player?.full?.energy?.level ?? 9999;
-
-            // phải cầm Pickaxe
-            if (!selectedItem || !selectedItem.startsWith("itm_pickaxe_")) {
-                STOP_AUTOMINE = true;
-                drawAutoStatus(false);
-                return showMessage("⚠️ Bạn không cầm Pickaxe — auto dừng!");
-            }
-
-            // kiểm tra tool/energy
-            if (now - lastCheck > 250) {
-                if (health <= 1) {
-                    STOP_AUTOMINE = true;
-                    drawAutoStatus(false);
-                    return showMessage("🪓 Tool sắp hỏng! Dừng auto!");
-                }
-                if (energy <= 4) {
-                    STOP_AUTOMINE = true;
-                    drawAutoStatus(false);
-                    return showMessage("🪫 Energy quá thấp! Dừng auto!");
-                }
-                lastCheck = now;
-            }
-
-            // lọc các mỏ
-            const entities = Array.from(room.entities.values());
-          const selfPos = room.selfPlayer?.position;
-            const mines = entities
-            .filter((ent) => {
-                const id = ent?.gameEntity?.id?.toLowerCase?.() || "";
-                const s = (ent?.state?.state || ent?.state || ent?.properties?.state || "").toLowerCase();
-                if (!id.startsWith("ent_mine_04")) return false;
-                if (!["waiting", "ready", "loaded"].includes(s)) return false;
-
-                const dist = Math.hypot((ent.x ?? 0) - selfPos.x, (ent.y ?? 0) - selfPos.y);
-                return dist <= 350; // 🚫 bỏ qua mỏ quá xa
-            })
-            .map(ent => ({
-                ent,
-                dist: Math.hypot((ent.x ?? 0) - selfPos.x, (ent.y ?? 0) - selfPos.y)
-            }))
-            .sort((a, b) => a.dist - b.dist) // ⚡ chỉ sắp theo khoảng cách gần nhất
-            .map(obj => obj.ent);
-            if (mines.length === 0) {
-                STOP_AUTOMINE = true;
-                drawAutoStatus(false);
-                showMessage("✅ Tất cả mỏ đã xong → Auto dừng & về Villa");
-                playBeep('stop')
-                return goToVilla();
-            }
-
-            let allLoaded = true;
-            let allLong = true;
-
-            for (const ent of mines) {
-                const state = (ent?.state?.state || ent?.state || ent?.properties?.state || "").toLowerCase();
-
-                try {
-                    if (state === "ready") {
-                        allLoaded = false;
-                        const pointer = await makePointerForEntity(ent);
-                        ent.clicked(pointer, {});
-                        ent.clicked(pointer, {});
-                    } else if (state === "waiting") {
-                        allLoaded = false;
-                        const pointer = await makePointerForEntity(ent);
-                        ent.clicked(pointer, {});
-                    } else if (state === "loaded") {
-                        const utcTarget = ent?.currentState?.displayInfo?.utcTarget || 0;
-                        if (utcTarget > nowUTC) {
-                            const remain = (utcTarget - nowUTC) / 1000;
-                            if (remain < 180 && remain > 0) {
-                                allLong = false;
-                                continue;
-                            } else if (remain <= 0) {
-                                const pointer = await makePointerForEntity(ent);
-                                ent.clicked(pointer, {});
-                                console.log(`⛏️ Bắt đầu lại mỏ @(${ent.x},${ent.y})`);
-                                allLoaded = false;
-                                allLong = false;
-                            } else if (remain < 1200) {
-                                allLong = false;
-                            }
-                        } else {
-                            allLong = false;
-                        }
-                    }
-                } catch (err) {
-                    console.warn("⚠️ Lỗi click mỏ:", err);
-                }
-            }
-
-            if (allLoaded && allLong) {
-                STOP_AUTOMINE = true;
-                drawAutoStatus(false);
-                showMessage("✅ Toàn bộ mỏ đã hồi >20 phút → Tự động về Villa!");
-                return goToVilla();
-            }
-
-            requestAnimationFrame(loop);
-        }
-
-        loop();
+    for (let i = 1; i <= stepsAuto; i++) {
+      const t = ease(i / stepsAuto);
+      const nx = curX + (x - curX) * t;
+      const ny = curY + (y - curY) * t;
+      hud.style.transform = `translate3d(${nx}px, ${ny}px, 0px)`;
+      await new Promise(r => setTimeout(r, delay));
     }
+  }
+
+  // 🧭 Tạo pointer và điều khiển chuột ảo di chuyển đúng vị trí mỏ
+  async function makePointerForEntity(entity) {
+    const room = window.pga?.helpers?.getRoomScene?.();
+    const cam = room?.cameras?.main;
+    const canvas = document.querySelector("canvas");
+    if (!entity || !canvas || !cam) return null;
+
+    // chuyển world → screen
+    const worldX = entity.x ?? 0;
+    const worldY = entity.y ?? 0;
+    const screenX = (worldX - cam.worldView.x) * cam.zoom;
+    const screenY = (worldY - cam.worldView.y) * cam.zoom;
+    const rect = canvas.getBoundingClientRect();
+    const targetX = rect.left + screenX;
+    const targetY = rect.top + screenY;
+
+    // 🖱️ HUD bay đến vị trí entity
+    await moveHudTo(targetX, targetY);
+
+    return {
+      x: screenX,
+      y: screenY,
+      worldX,
+      worldY,
+      center: { x: worldX, y: worldY },
+      position: { x: worldX, y: worldY },
+      leftButtonReleased: () => true,
+      rightButtonReleased: () => false,
+      leftButtonDown: () => false,
+      rightButtonDown: () => false,
+    };
+  }
+
+  // 🔁 Vòng lặp chính
+  async function loop() {
+    if (STOP_AUTOMINE) {
+      drawAutoStatus(false);
+      return showMessage("🛑 Auto stopped!");
+    }
+
+    const now = performance.now();
+    const nowUTC = Date.now();
+    const redux = window.pga?.helpers?.getReduxValue?.();
+
+    const selectedItem = redux?.storage?.selectedItem?.id ?? "";
+    const health = redux?.storage?.selectedSlot?.state?.displayInfo?.health ?? 9999;
+    const energy = redux?.game?.player?.full?.energy?.level ?? 9999;
+
+    // phải cầm Pickaxe
+    if (!selectedItem || !selectedItem.startsWith("itm_pickaxe_")) {
+      STOP_AUTOMINE = true;
+      drawAutoStatus(false);
+      return showMessage("⚠️ Bạn không cầm Pickaxe — auto dừng!");
+    }
+
+    // kiểm tra tool / energy mỗi 0.25s
+    if (now - lastCheck > 250) {
+      if (health <= 1) {
+        STOP_AUTOMINE = true;
+        drawAutoStatus(false);
+        return showMessage("🪓 Tool sắp hỏng! Dừng auto!");
+      }
+      if (energy <= 4) {
+        STOP_AUTOMINE = true;
+        drawAutoStatus(false);
+        return showMessage("🪫 Energy quá thấp! Dừng auto!");
+      }
+      lastCheck = now;
+    }
+
+    const entities = Array.from(room.entities.values());
+    const selfPos = room.selfPlayer?.position;
+
+    // 🔍 Lọc tất cả mỏ hợp lệ, KHÔNG giới hạn khoảng cách
+    const mines = entities
+      .filter((ent) => {
+        const id = ent?.gameEntity?.id?.toLowerCase?.() || "";
+        if (!id.startsWith("ent_mine_04")) return false;
+        const s = (ent?.state?.state || ent?.state || ent?.properties?.state || "").toLowerCase();
+        return ["waiting", "ready", "loaded"].includes(s);
+      })
+      .map(ent => ({
+        ent,
+        dist: Math.hypot((ent.x ?? 0) - selfPos.x, (ent.y ?? 0) - selfPos.y)
+      }))
+      .sort((a, b) => a.dist - b.dist)
+      .map(obj => obj.ent);
+
+    if (mines.length === 0) {
+      requestAnimationFrame(loop);
+      return;
+    }
+
+    let allLoaded = true;
+    let allLong = true;
+
+    for (const ent of mines) {
+      const state = (ent?.state?.state || ent?.state || ent?.properties?.state || "").toLowerCase();
+      const dist = Math.hypot((ent.x ?? 0) - selfPos.x, (ent.y ?? 0) - selfPos.y);
+
+      // 🛑 CHỈ kiểm tra khoảng cách ngay trước click
+      if (dist > 350) {
+        continue; // bỏ qua mỏ quá xa, không dừng auto
+      }
+
+      try {
+        if (state === "ready") {
+          allLoaded = false;
+          const pointer = await makePointerForEntity(ent);
+          ent.clicked(pointer, {});
+          ent.clicked(pointer, {});
+        } else if (state === "waiting") {
+          allLoaded = false;
+          const pointer = await makePointerForEntity(ent);
+          ent.clicked(pointer, {});
+        } else if (state === "loaded") {
+          const utcTarget = ent?.currentState?.displayInfo?.utcTarget || 0;
+          if (utcTarget > nowUTC) {
+            const remain = (utcTarget - nowUTC) / 1000;
+            if (remain < 180 && remain > 0) {
+              allLong = false;
+              continue;
+            } else if (remain <= 0) {
+              const pointer = await makePointerForEntity(ent);
+              ent.clicked(pointer, {});
+              console.log(`⛏️ Bắt đầu lại mỏ @(${ent.x},${ent.y})`);
+              allLoaded = false;
+              allLong = false;
+            } else if (remain < 1200) {
+              allLong = false;
+            }
+          } else {
+            allLong = false;
+          }
+        }
+      } catch (err) {
+        console.warn("⚠️ Lỗi click mỏ:", err);
+      }
+    }
+
+    // nếu tất cả mỏ đã loaded lâu → dừng auto
+    if (allLoaded && allLong) {
+      STOP_AUTOMINE = true;
+      drawAutoStatus(false);
+      showMessage("✅ Tất cả mỏ đã hồi >20 phút → Tự động về Villa!");
+      return goToVilla();
+    }
+
+    requestAnimationFrame(loop);
+  }
+
+  loop();
+}
+
+
 
     async function autoChopTreesVerticalProgressiveFast() {
         STOP_AUTO = false;
