@@ -513,49 +513,50 @@ async function autoMineZeroDelayUltraPro_v4() {
     let allLoaded = true;
     let allLong = true;
 
-    for (const ent of mines) {
-      const state = (ent?.state?.state || ent?.state || ent?.properties?.state || "").toLowerCase();
-      const dist = Math.hypot((ent.x ?? 0) - selfPos.x, (ent.y ?? 0) - selfPos.y);
+ for (const ent of mines) {
+  const state = (ent?.state?.state || ent?.state || ent?.properties?.state || "").toLowerCase();
+  const dist = Math.hypot((ent.x ?? 0) - selfPos.x, (ent.y ?? 0) - selfPos.y);
 
-      // 🛑 CHỈ kiểm tra khoảng cách ngay trước click
-      if (dist > 350) {
-        continue; // bỏ qua mỏ quá xa, không dừng auto
+  try {
+    if (state === "ready") {
+      allLoaded = false;
+      if (dist <= 350) {
+        const pointer = await makePointerForEntity(ent);
+        ent.clicked(pointer, {});
+        ent.clicked(pointer, {});
       }
-
-      try {
-        if (state === "ready") {
-          allLoaded = false;
-          const pointer = await makePointerForEntity(ent);
-          ent.clicked(pointer, {});
-          ent.clicked(pointer, {});
-        } else if (state === "waiting") {
-          allLoaded = false;
-          const pointer = await makePointerForEntity(ent);
-          ent.clicked(pointer, {});
-        } else if (state === "loaded") {
-          const utcTarget = ent?.currentState?.displayInfo?.utcTarget || 0;
-          if (utcTarget > nowUTC) {
-            const remain = (utcTarget - nowUTC) / 1000;
-            if (remain < 180 && remain > 0) {
-              allLong = false;
-              continue;
-            } else if (remain <= 0) {
-              const pointer = await makePointerForEntity(ent);
-              ent.clicked(pointer, {});
-              console.log(`⛏️ Bắt đầu lại mỏ @(${ent.x},${ent.y})`);
-              allLoaded = false;
-              allLong = false;
-            } else if (remain < 1200) {
-              allLong = false;
-            }
-          } else {
-            allLong = false;
+    } else if (state === "waiting") {
+      allLoaded = false;
+      if (dist <= 350) {
+        const pointer = await makePointerForEntity(ent);
+        ent.clicked(pointer, {});
+      }
+    } else if (state === "loaded") {
+      const utcTarget = ent?.currentState?.displayInfo?.utcTarget || 0;
+      if (utcTarget > nowUTC) {
+        const remain = (utcTarget - nowUTC) / 1000;
+        if (remain < 180 && remain > 0) {
+          allLong = false;
+          continue;
+        } else if (remain <= 0) {
+          if (dist <= 350) {
+            const pointer = await makePointerForEntity(ent);
+            ent.clicked(pointer, {});
           }
+          console.log(`⛏️ Bắt đầu lại mỏ @(${ent.x},${ent.y})`);
+          allLoaded = false;
+          allLong = false;
+        } else if (remain < 1200) {
+          allLong = false;
         }
-      } catch (err) {
-        console.warn("⚠️ Lỗi click mỏ:", err);
+      } else {
+        allLong = false;
       }
     }
+  } catch (err) {
+    console.warn("⚠️ Lỗi click mỏ:", err);
+  }
+}
 
     // nếu tất cả mỏ đã loaded lâu → dừng auto
     if (allLoaded && allLong) {
