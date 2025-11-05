@@ -69,62 +69,333 @@
     function mod_skin(){
         if(window.pga.helpers.getRoomScene()){
             const a =  window.pga.helpers.getRoomScene().selfPlayer.playerData;
-            if(a.avatar.id == "genju"){
-            //console.log(a)
-
-                switch(a.avatar.display.tokenId) {
-                    case '1374':
-                        a.avatar.display = {
-                        "avatarId": "genju",
-                        "tokenId": "27",
-                        "symbol": "GENJU",
-                        "nft": true,
-                        "image": "ipfs://QmcGYUq15moEzWRjgf89EAgvGnjcZEFtneFWYo7chL7kTw/27",
-                        "name": "Genju Genesisstrigidae",
-                        "chain": "ronin",
-                        "body": "undefined",
-                        "clothing": "undefined",
-                        "zombieeyes": "undefined",
-                        "eyes": "sad",
-                        "zombiemouth": "undefined",
-                        "zombieheadwear": "undefined",
-                        "eyewear": "undefined",
-                        "mouth": "undefined",
-                        "headwear": "undefined",
-                        "specialheadwear": "undefined",
-                        "onesies": "undefined",
-                        "honorary": "undefined",
-                        "1of1": "akumanosenshi"
+            if(a.avatar.id == "pixolotl"){
+            a.avatar =   {
+    "id": "dizzydemons",
+    "animations": {
+        "walk": {
+            "animation": "walk",
+            "start": 7,
+            "end": 12,
+            "frameRate": 6,
+            "repeat": -1
+        },
+        "drink": {
+            "animation": "drink",
+            "start": 13,
+            "end": 18,
+            "frameRate": 6,
+            "repeat": 0
+        },
+        "slash": {
+            "animation": "slash",
+            "start": 1,
+            "end": 1,
+            "frameRate": 1,
+            "repeat": 0
+        },
+        "idle": {
+            "animation": "idle",
+            "start": 1,
+            "end": 6,
+            "frameRate": 6,
+            "repeat": -1
+        },
+        "stab": {
+            "animation": "stab",
+            "start": 1,
+            "end": 1,
+            "frameRate": 1,
+            "repeat": 0
+        }
+    },
+    "chain": "matic",
+    "contractAddress": "0xbb1dcd17ebafddbcfe23986d1d1816cbede1738a",
+    "customName": "Dizzy Demons",
+    "defaultAvatar": {
+        "body": "none",
+        "back": "none",
+        "arms": "none",
+        "clothes": "none",
+        "eyes": "none",
+        "hat": "none",
+        "mouth": "none",
+        "mask": "none",
+        "class": "none"
+    },
+    "enabled": true,
+    "kind": "avatar",
+    "physics": {
+        "enabled": true,
+        "size": {
+            "height": 6,
+            "width": 12
+        },
+        "offset": {
+            "x": 0,
+            "y": 28
+        }
+    },
+    "pieces": [
+        {
+            "attributes": [],
+            "id": "body",
+            "url": {
+                "override": [
+                    {
+                        "text": "/body/"
+                    },
+                    {
+                        "attribute": "body"
+                    },
+                    {
+                        "text": ".png"
                     }
-                        break;
-                    case '1373':
-                       a.avatar.display = {
-                        "avatarId": "genju",
-                        "tokenId": "27",
-                        "symbol": "GENJU",
-                        "nft": true,
-                        "image": "ipfs://QmcGYUq15moEzWRjgf89EAgvGnjcZEFtneFWYo7chL7kTw/27",
-                        "name": "Genju Genesisstrigidae",
-                        "chain": "ronin",
-                        "body": "white",
-                        "clothing": "undefined",
-                        "zombieeyes": "undefined",
-                        "eyes": "sad",
-                        "zombiemouth": "undefined",
-                        "zombieheadwear": "undefined",
-                        "eyewear": "skigoggles",
-                        "mouth": "smile",
-                        "headwear": "undefined",
-                        "specialheadwear": "undefined",
-                        "onesies": "sharkonesie",
-                        "honorary": "undefined",
-                        "1of1": "undefined"
-                    }
-                        break;
-                        // code block
-                }
-
+                ]
             }
+        },
+        {
+            "attributes": [],
+            "id": "back",
+            "url": {
+                "override": [
+                    {
+                        "text": "/back/"
+                    },
+                    {
+                        "attribute": "back"
+                    },
+                    {
+                        "text": "/"
+                    },
+                    {
+                        "attribute": "body"
+                    },
+                    {
+                        "text": ".png"
+                    }
+                ]
+            }
+        },
+        {
+            "attributes": [],
+            "id": "arms",
+            "url": {
+                "override": [
+                    {
+                        "text": "/arms/"
+                    },
+                    {
+                        "attribute": "arms"
+                    },
+                    {
+                        "text": "/"
+                    },
+                    {
+                        "attribute": "body"
+                    },
+                    {
+                        "text": ".png"
+                    }
+                ]
+            }
+        },
+        {
+            "attributes": [],
+            "id": "clothes",
+            "url": {
+                "override": [
+                    {
+                        "text": "/clothes/"
+                    },
+                    {
+                        "attribute": "clothes"
+                    },
+                    {
+                        "text": "/"
+                    },
+                    {
+                        "attribute": "body"
+                    },
+                    {
+                        "text": ".png"
+                    }
+                ]
+            }
+        },
+        {
+            "attributes": [],
+            "id": "eyes",
+            "url": {
+                "override": [
+                    {
+                        "text": "/eyes/"
+                    },
+                    {
+                        "attribute": "eyes"
+                    },
+                    {
+                        "text": "/"
+                    },
+                    {
+                        "attribute": "body"
+                    },
+                    {
+                        "text": ".png"
+                    }
+                ]
+            }
+        },
+        {
+            "attributes": [],
+            "id": "hat",
+            "url": {
+                "override": [
+                    {
+                        "text": "/hat/"
+                    },
+                    {
+                        "attribute": "hat"
+                    },
+                    {
+                        "text": "/"
+                    },
+                    {
+                        "attribute": "body"
+                    },
+                    {
+                        "text": ".png"
+                    }
+                ]
+            }
+        },
+        {
+            "attributes": [],
+            "id": "mouth",
+            "url": {
+                "override": [
+                    {
+                        "text": "/mouth/"
+                    },
+                    {
+                        "attribute": "mouth"
+                    },
+                    {
+                        "text": "/"
+                    },
+                    {
+                        "attribute": "body"
+                    },
+                    {
+                        "text": ".png"
+                    }
+                ]
+            }
+        },
+        {
+            "attributes": [],
+            "id": "mask",
+            "url": {
+                "override": [
+                    {
+                        "text": "/mask/"
+                    },
+                    {
+                        "attribute": "mask"
+                    },
+                    {
+                        "text": "/"
+                    },
+                    {
+                        "attribute": "body"
+                    },
+                    {
+                        "text": ".png"
+                    }
+                ]
+            }
+        },
+        {
+            "attributes": [],
+            "id": "class",
+            "url": {
+                "override": [
+                    {
+                        "text": "/"
+                    },
+                    {
+                        "attribute": "class"
+                    },
+                    {
+                        "text": "/"
+                    },
+                    {
+                        "attribute": "name"
+                    },
+                    {
+                        "text": ".png"
+                    }
+                ]
+            }
+        }
+    ],
+    "sprite": {
+        "isSpritesheet": true,
+        "scale": 1,
+        "frames": 19,
+        "size": {
+            "height": 64,
+            "width": 64
+        }
+    },
+    "hold": "",
+    "mood": 1,
+    "display": {
+        "avatarId": "dizzydemons",
+        "tokenId": "2055",
+        "symbol": "DIZZY",
+        "nft": true,
+        "image": "https://res.cloudinary.com/alchemyapi/image/upload/thumbnailv2/matic-mainnet/04e1de03e18e7a44fee934c6ca4b40c6",
+        "name": "medrautgoldenscale",
+        "class": "hero",
+    }
+}
+            }
+            if (a?.avatar?.id === "genju") {
+                const token = a.avatar.display?.tokenId;
+
+                // Map tokenId → onesie name
+                const onesieMap = {
+                    "1374": "dinoonesie",
+                    "1373": "sharkonesie",
+                };
+
+                if (onesieMap[token]) {
+                    a.avatar.display = {
+                        avatarId: "genju",
+                        tokenId: token,
+                        symbol: "GENJU",
+                        nft: true,
+                        image: `ipfs://QmcGYUq15moEzWRjgf89EAgvGnjcZEFtneFWYo7chL7kTw/${token}`,
+                        name: "Genju Genesisstrigidae",
+                        chain: "ronin",
+                        body: "white",
+                        clothing: undefined,
+                        zombieeyes: undefined,
+                        eyes: "sad",
+                        zombiemouth: undefined,
+                        zombieheadwear: undefined,
+                        eyewear: "skigoggles",
+                        mouth: "smile",
+                        headwear: undefined,
+                        specialheadwear: undefined,
+                        onesies: onesieMap[token],
+                        honorary: undefined,
+                        "1of1": undefined,
+                    };
+                }
+            }
+
             //console.log(a)
             a.modifiers.push(
                 {
@@ -194,14 +465,28 @@
             console.error("Lỗi saveMail:", e);
         }
     }
- function clickportal(data) {
-    if(data.entity == "ent_infiniportal"){
-        document.querySelector('.voxels-industry-select-reload.clickable')?.click();
-        //console.log(data)
+    function premium(){
+        const scene = window.pga.helpers.getRoomScene();
+        if(scene){
+            scene.stateManager.players.get(scene.playerId).memberships["guild-member-guildpal"] = {
+                count: 1,
+                role: "Supporter"
+            };
+        }
     }
+function clickportal(data) {
+  if (data.entity !== "ent_infiniportal") return;
+
+  if (data.impact === "click" && typeof window.openPanel === "function") {
+    window.openPanel();
+  }
+  else if (data.impact === "setup" && typeof window.closePanel === "function") {
+    window.closePanel();
+  }
 }
     // Đăng ký sự kiện khi onGameEvent sẵn sàng
     waitForOnGameEvent(() => {
+        window.onGameEvent("GAME_INITIATED", premium);
         window.onGameEvent("PLAYER_COIN_INVENTORY_CHANGE", log_coin);// bắt sự thay đổi của coin
         window.onGameEvent("ready", mod_skin);
         // Nhận mail
