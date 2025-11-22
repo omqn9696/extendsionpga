@@ -12,7 +12,72 @@
 
 (function() {
     'use strict';
+(function () {
+    const W = typeof unsafeWindow !== "undefined" ? unsafeWindow : window;
 
+    // Tạo box log
+    const logBox = document.createElement("div");
+    Object.assign(logBox.style, {
+        position: "fixed",
+        bottom: "0px",
+        left: "0px",
+        width: "100%",
+        maxHeight: "180px",
+        overflowY: "auto",
+        background: "rgba(0,0,0,0.75)",
+        color: "#0f0",
+        fontSize: "12px",
+        padding: "6px",
+        zIndex: 999999,
+        fontFamily: "monospace",
+        display: "none",
+        borderTop: "1px solid #444"
+    });
+    logBox.id = "tm-debug-console";
+    document.body.appendChild(logBox);
+
+    // Nút toggle console
+    const toggleBtn = document.createElement("button");
+    toggleBtn.innerText = "LOG";
+    Object.assign(toggleBtn.style, {
+        position: "fixed",
+        bottom: "185px",
+        left: "10px",
+        zIndex: 999999,
+        padding: "5px 10px",
+        background: "#222",
+        color: "#0f0",
+        border: "1px solid #0f0",
+        borderRadius: "4px",
+        fontSize: "14px"
+    });
+    document.body.appendChild(toggleBtn);
+
+    toggleBtn.onclick = () => {
+        logBox.style.display = (logBox.style.display === "none" ? "block" : "none");
+    };
+
+    // Hook console.log
+    const rawLog = console.log;
+    console.log = function (...msg) {
+        rawLog.apply(console, msg);
+        const line = document.createElement("div");
+        line.textContent = "[LOG] " + msg.map(x => typeof x === "object" ? JSON.stringify(x) : x).join(" ");
+        logBox.appendChild(line);
+        logBox.scrollTop = logBox.scrollHeight;
+    };
+
+    // Hook console.error
+    const rawErr = console.error;
+    console.error = function (...msg) {
+        rawErr.apply(console, msg);
+        const line = document.createElement("div");
+        line.style.color = "#ff4444";
+        line.textContent = "[ERROR] " + msg.map(x => typeof x === "object" ? JSON.stringify(x) : x).join(" ");
+        logBox.appendChild(line);
+        logBox.scrollTop = logBox.scrollHeight;
+    };
+})();
     /*******************************
      * 1) Chuẩn hóa window
      *******************************/
